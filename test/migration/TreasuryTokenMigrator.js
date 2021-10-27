@@ -332,11 +332,11 @@ describe("Treasury Token Migration", async () => {
             ...treasury_tokens,
         ]);
 
-        allReserveandLP.forEach(async(token) => {
-            if (token.name === "dai") {
-                const old_ohm_total_supply = await olympus_tokens[2].contract.totalSupply();
-                const dai_balance_left_to_back_circulating_ohm_1_for_1 = await treasury_tokens[3].contract.balanceOf(OLD_TREASURY_ADDRESS);
+        const old_ohm_total_supply = await olympus_tokens[2].contract.totalSupply();
+        const dai_balance_left_to_back_circulating_ohm_1_for_1 = await treasury_tokens[3].contract.balanceOf(OLD_TREASURY_ADDRESS);
 
+        allReserveandLP.forEach((token) => {
+            if (token.name === "dai") {
                 const old_ohm_balance_in_18_decimal = (old_ohm_total_supply * 10**18) / 10**9;
 
                 expect(Number(dai_balance_left_to_back_circulating_ohm_1_for_1))
