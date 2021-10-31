@@ -61,13 +61,17 @@ async function main() {
   const OHM = await ethers.getContractFactory("OlympusERC20Token");
   const ohm = await OHM.deploy();
 
+  console.log("ohm", ohm.address);
+
   // Deploy DAI
   const DAI = await ethers.getContractFactory("DAI");
   const dai = await DAI.deploy(0);
+  console.log("dai", dai.address);
 
   // Deploy Frax
   const Frax = await ethers.getContractFactory("FRAX");
   const frax = await Frax.deploy(0);
+  console.log("frax", frax.address);
 
   // Deploy 10,000,000 mock DAI and mock Frax
   await dai.mint(deployer.address, initialMint);
@@ -82,6 +86,7 @@ async function main() {
     frax.address,
     0
   );
+  console.log("treasury", treasury.address);
 
   // Deploy bonding calc
   const OlympusBondingCalculator = await ethers.getContractFactory(
@@ -99,10 +104,11 @@ async function main() {
     epochLengthInBlocks,
     firstEpochBlock
   );
-
+  console.log("distributor", distributor.address);
   // Deploy sOHM
   const SOHM = await ethers.getContractFactory("sOlympus");
   const sOHM = await SOHM.deploy();
+  console.log("sOHM", sOHM.address);
 
   // Deploy Staking
   const Staking = await ethers.getContractFactory("OlympusStaking");
@@ -113,6 +119,7 @@ async function main() {
     firstEpochNumber,
     firstEpochBlock
   );
+  console.log("staking", staking.address);
 
   // Deploy staking warmpup
   const StakingWarmpup = await ethers.getContractFactory("StakingWarmup");
@@ -120,6 +127,7 @@ async function main() {
     staking.address,
     sOHM.address
   );
+  console.log("stakingWarmup", stakingWarmup.address);
 
   // Deploy staking helper
   const StakingHelper = await ethers.getContractFactory("StakingHelper");
@@ -127,6 +135,7 @@ async function main() {
     staking.address,
     ohm.address
   );
+  console.log("stakingHelper", stakingHelper.address);
 
   // Deploy DAI bond
   //@dev changed function call to Treasury of 'valueOf' to 'valueOfToken' in BondDepository due to change in Treausry contract
@@ -138,6 +147,7 @@ async function main() {
     MockDAO.address,
     zeroAddress
   );
+  console.log("daiBond", daiBond.address);
 
   // Deploy Frax bond
   //@dev changed function call to Treasury of 'valueOf' to 'valueOfToken' in BondDepository due to change in Treausry contract
@@ -149,13 +159,13 @@ async function main() {
     MockDAO.address,
     zeroAddress
   );
+  console.log("fraxBond", fraxBond.address);
 
   // queue and toggle DAI and Frax bond reserve depositor
-  await treasury.queue("0", daiBond.address);
-  await treasury.queue("0", fraxBond.address);
-  await treasury.toggle("0", daiBond.address, zeroAddress);
-  await treasury.toggle("0", fraxBond.address, zeroAddress);
-
+  await (await treasury.queue("0", daiBond.address)).wait();
+  await (await treasury.queue("0", fraxBond.address)).wait();
+  await (await treasury.toggle("0", daiBond.address, zeroAddress)).wait();
+  await (await treasury.toggle("0", fraxBond.address, zeroAddress)).wait();
   // Set DAI and Frax bond terms
   await daiBond.initializeBondTerms(
     daiBondBCV,
@@ -195,16 +205,16 @@ async function main() {
   await distributor.addRecipient(staking.address, initialRewardRate);
 
   // queue and toggle reward manager
-  await treasury.queue("8", distributor.address);
-  await treasury.toggle("8", distributor.address, zeroAddress);
+  await (await treasury.queue("8", distributor.address)).wait();
+  await (await treasury.toggle("8", distributor.address, zeroAddress)).wait();
 
   // queue and toggle deployer reserve depositor
-  await treasury.queue("0", deployer.address);
-  await treasury.toggle("0", deployer.address, zeroAddress);
+  await (await treasury.queue("0", deployer.address)).wait();
+  await (await treasury.toggle("0", deployer.address, zeroAddress)).wait();
 
   // queue and toggle liquidity depositor
-  await treasury.queue("4", deployer.address);
-  await treasury.toggle("4", deployer.address, zeroAddress);
+  await (await treasury.queue("4", deployer.address)).wait();
+  await (await treasury.toggle("4", deployer.address, zeroAddress)).wait();
 
   // Approve the treasury to spend DAI and Frax
   await dai.approve(treasury.address, largeApproval);
